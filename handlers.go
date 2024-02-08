@@ -54,29 +54,18 @@ func listGithubPublicRepositories(token string) ([]*Repository, error) {
 	}
 
 	var wg sync.WaitGroup
-	ch := make(chan interface{}, len(repositories))
 
 	for i := range repositories {
 		wg.Add(1)
-		go getLanguages(token, repositories[i].Languages_URL, &wg, ch)
+		go getLanguages(token, repositories[i].Languages_URL, &wg, repositories[i])
 	}
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
+	wg.Wait()
 
-	for _, repo := range repositories {
-		languages := <-ch
-		if languages != nil {
-			repo.Languages = languages
-		}
-		fmt.Println(*repo)
-	}
 	fmt.Println(repositories)
 	return repositories, nil
 }
 
-func getLanguages(token string, url string, wg *sync.WaitGroup, ch chan<- interface{}) {
+func getLanguages(token string, url string, wg *sync.WaitGroup, repo *Repository) {
 	defer wg.Done()
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -91,7 +80,6 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, ch chan<- interf
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
-		ch <- nil
 		return
 	}
 	defer response.Body.Close()
@@ -104,11 +92,10 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, ch chan<- interf
 	err = json.NewDecoder(response.Body).Decode(&languages)
 	if err != nil {
 		fmt.Println("Error decoding JSON response:", err)
-		ch <- nil
 		return
 	}
+	repo.Languages = languages
 
-	ch <- languages
 }
 
 func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
