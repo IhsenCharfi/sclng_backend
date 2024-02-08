@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -25,6 +24,8 @@ func main() {
 	// Initialize web server and configure the following routes:
 	// GET /repos
 	// GET /stats
+	router.HandleFunc("/repos", getReposHandler)
+	router.HandleFunc("/stats", getStatsHandler)
 
 	log = log.WithField("port", cfg.Port)
 	log.Info("Listening...")
@@ -33,16 +34,4 @@ func main() {
 		log.WithError(err).Error("Fail to listen to the given port")
 		os.Exit(2)
 	}
-}
-
-func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
-	log := logger.Get(r.Context())
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	err := json.NewEncoder(w).Encode(map[string]string{"status": "pong"})
-	if err != nil {
-		log.WithError(err).Error("Fail to encode JSON")
-	}
-	return nil
 }

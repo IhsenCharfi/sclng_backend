@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	Port int `envconfig:"PORT" default:"5000"`
+	Port  int    `envconfig:"PORT" default:"3000"`
+	Token string `envconfig:"TOKEN"`
 }
 
 func newConfig() (*Config, error) {
