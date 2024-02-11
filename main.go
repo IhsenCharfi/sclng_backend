@@ -24,7 +24,6 @@ func main() {
 	// Initialize web server and configure the following routes:
 	// GET /repos
 	// GET /stats
-	router.HandleFunc("/reposNoFilter", getAllReposHandler)
 	router.HandleFunc("/repos", getReposHandler)
 	router.HandleFunc("/stats", getStatsHandler)
 

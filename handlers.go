@@ -154,24 +154,6 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, repo *Repository
 
 }
 
-func getAllReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
-	log := logger.Get(r.Context())
-
-	repositories, err := listGithubPublicRepositories(token)
-	if err != nil {
-		log.WithError(err).Error("Fail to list repo JSON")
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	err = json.NewEncoder(w).Encode(repositories)
-	if err != nil {
-		log.WithError(err).Error("Fail to encode JSON")
-	}
-	return nil
-}
-
 func getStatsHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
 	w.Header().Add("Content-Type", "application/json")
