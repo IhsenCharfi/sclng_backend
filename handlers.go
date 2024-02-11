@@ -23,6 +23,50 @@ func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) er
 	return nil
 }
 
+func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+	log := logger.Get(r.Context())
+
+	repositories, err := listGithubPublicRepositories(token)
+	if err != nil {
+		log.WithError(err).Error("Fail to list repo JSON")
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	queryParams := r.URL.Query()
+	paramValue := queryParams.Get("language")
+
+	if paramValue != "" {
+		var updatedRepos []*Repository
+		for _, repo := range repositories {
+			fmt.Println("repo.languages", repo.Languages)
+			fmt.Println("paramValue", paramValue)
+			for language := range repo.Languages {
+				fmt.Println(language)
+
+				if language == paramValue {
+					updatedRepos = append(updatedRepos, repo)
+				}
+			}
+
+		}
+		err = json.NewEncoder(w).Encode(updatedRepos)
+		if err != nil {
+			log.WithError(err).Error("Fail to encode JSON")
+		}
+		return nil
+	} else {
+		err = json.NewEncoder(w).Encode(repositories)
+		if err != nil {
+			log.WithError(err).Error("Fail to encode JSON")
+		}
+	}
+
+	return nil
+}
+
 func listGithubPublicRepositories(token string) ([]*Repository, error) {
 	url := "https://api.github.com/repositories"
 	req, err := http.NewRequest("GET", url, nil)
@@ -88,7 +132,7 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, repo *Repository
 		return
 	}
 
-	var languages interface{}
+	var languages map[string]interface{}
 	err = json.NewDecoder(response.Body).Decode(&languages)
 	if err != nil {
 		fmt.Println("Error decoding JSON response:", err)
@@ -98,18 +142,14 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, repo *Repository
 
 }
 
-func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+func getAllReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
 
 	repositories, err := listGithubPublicRepositories(token)
 	if err != nil {
 		log.WithError(err).Error("Fail to list repo JSON")
 	}
-	for _, repo := range repositories {
-		fmt.Println(repo)
-		fmt.Println(*repo)
 
-	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
