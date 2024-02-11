@@ -40,8 +40,12 @@ func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 
 	repositories, err := listGithubPublicRepositories(token)
 	if err != nil {
-		log.WithError(err).Error("Fail to list repo JSON")
 		w.WriteHeader(http.StatusInternalServerError)
+		err := json.NewEncoder(w).Encode(map[string]string{"error": "internal error"})
+		if err != nil {
+			log.WithError(err).Error("Fail to list repo JSON")
+		}
+		return err
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -66,13 +70,23 @@ func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 		}
 		err = json.NewEncoder(w).Encode(updatedRepos)
 		if err != nil {
-			log.WithError(err).Error("Fail to encode JSON")
+			w.WriteHeader(http.StatusInternalServerError)
+			err := json.NewEncoder(w).Encode(map[string]string{"error": "internal error"})
+			if err != nil {
+				log.WithError(err).Error("Fail to encode JSON")
+			}
+			return err
 		}
 		return nil
 	} else {
 		err = json.NewEncoder(w).Encode(repositories)
 		if err != nil {
-			log.WithError(err).Error("Fail to encode JSON")
+			w.WriteHeader(http.StatusInternalServerError)
+			err := json.NewEncoder(w).Encode(map[string]string{"error": "internal error"})
+			if err != nil {
+				log.WithError(err).Error("Fail to encode JSON")
+			}
+			return err
 		}
 	}
 
@@ -117,7 +131,6 @@ func listGithubPublicRepositories(token string) ([]*Repository, error) {
 	}
 	wg.Wait()
 
-	fmt.Println(repositories)
 	return repositories, nil
 }
 
