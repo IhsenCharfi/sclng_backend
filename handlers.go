@@ -26,6 +26,18 @@ func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) er
 func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
 
+	//Check token validation
+	token := extractToken(r)
+	valid := isGitHubTokenValid(token)
+	if !valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		err := json.NewEncoder(w).Encode(map[string]string{"error": "token invalid"})
+		if err != nil {
+			log.WithError(err).Error("Failed to encode JSON")
+		}
+		return err
+	}
+
 	repositories, err := listGithubPublicRepositories(token)
 	if err != nil {
 		log.WithError(err).Error("Fail to list repo JSON")
