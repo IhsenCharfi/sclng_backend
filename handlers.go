@@ -40,6 +40,7 @@ func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 
 	repositories, err := listGithubPublicRepositories(token)
 	if err != nil {
+		log.WithError(err).Error("Fail to list repo JSON")
 		w.WriteHeader(http.StatusInternalServerError)
 		err := json.NewEncoder(w).Encode(map[string]string{"error": "internal error"})
 		if err != nil {
@@ -94,7 +95,7 @@ func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 }
 
 func listGithubPublicRepositories(token string) ([]*Repository, error) {
-	url := "https://api.github.com/repositories"
+	url := "https://api.github.com/search/repositories?apiVersion=2022-11-28&q=is:public&sort=updated&order=desc&per_page=100"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -112,16 +113,19 @@ func listGithubPublicRepositories(token string) ([]*Repository, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
+		// TODO: fix it when status not OK and err nil
 		return nil, err
 	}
 
-	// Decode the JSON response into a slice of Repository structs
-	//TODO: decode into interface to make the func reusable.
-	var repositories []*Repository
-	err = json.NewDecoder(response.Body).Decode(&repositories)
+	// Decode the JSON response into a slice of SearchResponse structs
+	var repoResponse SearchResponse
+	err = json.NewDecoder(response.Body).Decode(&repoResponse)
 	if err != nil {
 		return nil, err
 	}
+
+	var repositories []*Repository
+	repositories = repoResponse.Items
 
 	var wg sync.WaitGroup
 
@@ -231,8 +235,8 @@ func getStatsHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 }
 
 func largest_bytes(resporitories []*Repository) {
-	max := 0
-	for _, repo := range resporitories {
-		//TODO..
-	}
+	//max := 0
+	//for _, repo := range resporitories {
+	//TODO..
+	//}
 }

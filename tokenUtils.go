@@ -9,6 +9,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func getClient(token string) *github.Client {
+	//create github client
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
+
+	return client
+}
+
 func extractToken(r *http.Request) string {
 	// Retrieve the Authorization header
 	authHeader := r.Header.Get("Authorization")
@@ -28,12 +38,8 @@ func extractToken(r *http.Request) string {
 }
 
 func isGitHubTokenValid(token string) bool {
-	//create github client
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
 
+	client := getClient(token)
 	// Make a request to the authenticated user endpoint to check token validity
 	user, _, err := client.Users.Get(context.Background(), "")
 	if err != nil {

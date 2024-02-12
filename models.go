@@ -11,3 +11,9 @@ type Repository struct {
 	Languages_URL string                 `json:"languages_url"`
 	Languages     map[string]interface{} `json:"languages"`
 }
+
+type SearchResponse struct {
+	TotalCount       int64         `json:"total_count"`
+	IncompleteResult bool          `json:"incomplete_results"`
+	Items            []*Repository `json:"items"`
+}
