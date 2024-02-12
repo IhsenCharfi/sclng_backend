@@ -2,7 +2,6 @@ package internalHandlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -49,11 +48,7 @@ func GetReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 	if paramValue != "" {
 		var updatedRepos []*models.Repository
 		for _, repo := range repositories {
-			fmt.Println("repo.languages", repo.Languages)
-			fmt.Println("paramValue", paramValue)
 			for language := range repo.Languages {
-				fmt.Println(language)
-
 				if language == paramValue {
 					updatedRepos = append(updatedRepos, repo)
 				}
@@ -155,7 +150,7 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, repo *models.Rep
 	var languages map[string]interface{}
 	err = json.NewDecoder(response.Body).Decode(&languages)
 	if err != nil {
-		fmt.Println("Error decoding JSON response:", err)
+		log.WithError(err).Error("Fail to decode JSON")
 		return
 	}
 	repo.Languages = languages
