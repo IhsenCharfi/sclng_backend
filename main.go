@@ -9,6 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/IhsenCharfi/sclng_backend/internalHandlers"
+	_ "github.com/IhsenCharfi/sclng_backend/internalHandlers"
+
 	"github.com/Scalingo/go-handlers"
 	"github.com/Scalingo/go-utils/logger"
 )
@@ -24,12 +27,12 @@ func main() {
 
 	log.Info("Initializing routes")
 	router := handlers.NewRouter(log)
-	router.HandleFunc("/ping", pongHandler)
+	router.HandleFunc("/ping", internalHandlers.PongHandler)
 	// Initialize web server and configure the following routes:
 	// GET /repos
 	// GET /stats
-	router.HandleFunc("/repos", getReposHandler)
-	router.HandleFunc("/stats", getStatsHandler)
+	router.HandleFunc("/repos", internalHandlers.GetReposHandler)
+	router.HandleFunc("/stats", internalHandlers.GetStatsHandler)
 
 	log = log.WithField("port", cfg.Port)
 	log.Info("Listening...")

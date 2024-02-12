@@ -1,4 +1,4 @@
-package main
+package internalHandlers
 
 import (
 	"encoding/json"
@@ -6,29 +6,20 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/IhsenCharfi/sclng_backend/models"
+	"github.com/IhsenCharfi/sclng_backend/utils"
+
 	"github.com/Scalingo/go-utils/logger"
 )
 
 var log = logger.Default()
 
-func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
-	log := logger.Get(r.Context())
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	err := json.NewEncoder(w).Encode(map[string]string{"status": "pong"})
-	if err != nil {
-		log.WithError(err).Error("Fail to encode JSON")
-	}
-	return nil
-}
-
-func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+func GetReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
 
 	//Check token validation
-	token := extractToken(r)
-	valid := isGitHubTokenValid(token)
+	token := utils.ExtractToken(r)
+	valid := utils.IsGitHubTokenValid(token)
 	if !valid {
 		w.WriteHeader(http.StatusUnauthorized)
 		err := json.NewEncoder(w).Encode(map[string]string{"error": "token invalid"})
@@ -56,7 +47,7 @@ func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 	paramValue := queryParams.Get("language")
 
 	if paramValue != "" {
-		var updatedRepos []*Repository
+		var updatedRepos []*models.Repository
 		for _, repo := range repositories {
 			fmt.Println("repo.languages", repo.Languages)
 			fmt.Println("paramValue", paramValue)
@@ -94,7 +85,7 @@ func getReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 	return nil
 }
 
-func listGithubPublicRepositories(token string) ([]*Repository, error) {
+func listGithubPublicRepositories(token string) ([]*models.Repository, error) {
 	url := "https://api.github.com/search/repositories?apiVersion=2022-11-28&q=is:public&sort=updated&order=desc&per_page=100"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -118,13 +109,13 @@ func listGithubPublicRepositories(token string) ([]*Repository, error) {
 	}
 
 	// Decode the JSON response into a slice of SearchResponse structs
-	var repoResponse SearchResponse
+	var repoResponse models.SearchResponse
 	err = json.NewDecoder(response.Body).Decode(&repoResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	var repositories []*Repository
+	var repositories []*models.Repository
 	repositories = repoResponse.Items
 
 	var wg sync.WaitGroup
@@ -138,7 +129,7 @@ func listGithubPublicRepositories(token string) ([]*Repository, error) {
 	return repositories, nil
 }
 
-func getLanguages(token string, url string, wg *sync.WaitGroup, repo *Repository) {
+func getLanguages(token string, url string, wg *sync.WaitGroup, repo *models.Repository) {
 	defer wg.Done()
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -169,74 +160,4 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, repo *Repository
 	}
 	repo.Languages = languages
 
-}
-
-func getStatsHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
-	log := logger.Get(r.Context())
-	//Check token validation
-	token := extractToken(r)
-	valid := isGitHubTokenValid(token)
-	if !valid {
-		w.WriteHeader(http.StatusUnauthorized)
-		err := json.NewEncoder(w).Encode(map[string]string{"error": "token invalid"})
-		if err != nil {
-			log.WithError(err).Error("Failed to encode JSON")
-		}
-		return err
-	}
-
-	//get filter param
-	queryParams := r.URL.Query()
-	paramValue := queryParams.Get("language")
-	url := "http://localhost:3000/repos"
-	if paramValue != "" {
-		url = url + "?language=" + paramValue
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	// Make the request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		return nil
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode != http.StatusOK {
-		return nil
-	}
-
-	var repositories []*Repository
-	err = json.NewDecoder(response.Body).Decode(&repositories)
-	if err != nil {
-		return nil
-	}
-
-	stats := map[string]interface{}{
-		"total_repos": len(repositories),
-		//"largest_bytes": largestBytes(repositories),
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	err = json.NewEncoder(w).Encode(stats)
-	if err != nil {
-		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
-		return nil
-	}
-	return nil
-}
-
-func largest_bytes(resporitories []*Repository) {
-	//max := 0
-	//for _, repo := range resporitories {
-	//TODO..
-	//}
 }

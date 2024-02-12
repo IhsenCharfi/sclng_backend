@@ -1,13 +1,16 @@
-package main
+package utils
 
 import (
 	"context"
 	"net/http"
 	"strings"
 
+	"github.com/Scalingo/go-utils/logger"
 	"github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
 )
+
+var log = logger.Default()
 
 func getClient(token string) *github.Client {
 	//create github client
@@ -19,7 +22,7 @@ func getClient(token string) *github.Client {
 	return client
 }
 
-func extractToken(r *http.Request) string {
+func ExtractToken(r *http.Request) string {
 	// Retrieve the Authorization header
 	authHeader := r.Header.Get("Authorization")
 
@@ -37,7 +40,7 @@ func extractToken(r *http.Request) string {
 	return authParts[1]
 }
 
-func isGitHubTokenValid(token string) bool {
+func IsGitHubTokenValid(token string) bool {
 
 	client := getClient(token)
 	// Make a request to the authenticated user endpoint to check token validity

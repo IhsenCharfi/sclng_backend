@@ -1,6 +1,13 @@
-module github.com/Scalingo/sclng-backend-test-v1
+module github.com/IhsenCharfi/sclng_backend
 
-go 1.20
+go 1.21.5
+
+replace (
+	github.com/IhsenCharfi/sclng_backend/internalHandlers => ./internalHandlers
+	github.com/IhsenCharfi/sclng_backend/models => ../models
+	github.com/IhsenCharfi/sclng_backend/utils => ../utils
+
+)
 
 require (
 	github.com/Scalingo/go-handlers v1.8.1
