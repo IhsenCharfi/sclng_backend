@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/IhsenCharfi/sclng_backend/configuration"
 	"github.com/IhsenCharfi/sclng_backend/internalHandlers"
-	_ "github.com/IhsenCharfi/sclng_backend/internalHandlers"
 
 	"github.com/Scalingo/go-handlers"
 	"github.com/Scalingo/go-utils/logger"
@@ -19,7 +19,7 @@ import (
 func main() {
 	log := logger.Default()
 	log.Info("Initializing app")
-	cfg, err := newConfig()
+	cfg, err := configuration.NewConfig()
 	if err != nil {
 		log.WithError(err).Error("Fail to initialize configuration")
 		os.Exit(1)

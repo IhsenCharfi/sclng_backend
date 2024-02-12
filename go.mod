@@ -3,6 +3,7 @@ module github.com/IhsenCharfi/sclng_backend
 go 1.21.5
 
 replace (
+	github.com/IhsenCharfi/sclng_backend/configuration => ./configuration
 	github.com/IhsenCharfi/sclng_backend/internalHandlers => ./internalHandlers
 	github.com/IhsenCharfi/sclng_backend/models => ../models
 	github.com/IhsenCharfi/sclng_backend/utils => ../utils
