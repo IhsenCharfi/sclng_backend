@@ -147,7 +147,7 @@ func getLanguages(token string, url string, wg *sync.WaitGroup, repo *models.Rep
 		return
 	}
 
-	var languages map[string]interface{}
+	var languages map[string]int
 	err = json.NewDecoder(response.Body).Decode(&languages)
 	if err != nil {
 		log.WithError(err).Error("Fail to decode JSON")
