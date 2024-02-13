@@ -2,9 +2,10 @@ version: '3'
 services:
   web:
     build: .
+    container_name: "sclng_backend"
     volumes:
-      - ./:/go/src/github.com/Scalingo/sclng-backend-test-v1
+      - ./:/go/src/github.com/IhsenCharfi/sclng_backend
     ports:
-      - "5000:5000"
-    command: reflex -r '\.go$$' -s -- sh -c 'go build -buildvcs=false && ./sclng-backend-test-v1'
+      - "3000:3000"
+    command: reflex -r '\.go$$' -s -- sh -c 'go build -buildvcs=false && ./sclng_backend'
     stop_signal: SIGKILL

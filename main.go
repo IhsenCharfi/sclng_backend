@@ -1,10 +1,16 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/IhsenCharfi/sclng_backend/configuration"
+	"github.com/IhsenCharfi/sclng_backend/internalHandlers"
 
 	"github.com/Scalingo/go-handlers"
 	"github.com/Scalingo/go-utils/logger"
@@ -13,7 +19,7 @@ import (
 func main() {
 	log := logger.Default()
 	log.Info("Initializing app")
-	cfg, err := newConfig()
+	cfg, err := configuration.NewConfig()
 	if err != nil {
 		log.WithError(err).Error("Fail to initialize configuration")
 		os.Exit(1)
@@ -21,28 +27,46 @@ func main() {
 
 	log.Info("Initializing routes")
 	router := handlers.NewRouter(log)
-	router.HandleFunc("/ping", pongHandler)
+	router.HandleFunc("/ping", internalHandlers.PongHandler)
 	// Initialize web server and configure the following routes:
 	// GET /repos
 	// GET /stats
+	router.HandleFunc("/repos", internalHandlers.GetReposHandler)
+	router.HandleFunc("/stats", internalHandlers.GetStatsHandler)
 
 	log = log.WithField("port", cfg.Port)
 	log.Info("Listening...")
-	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), router)
-	if err != nil {
-		log.WithError(err).Error("Fail to listen to the given port")
-		os.Exit(2)
-	}
-}
 
-func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
-	log := logger.Get(r.Context())
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	err := json.NewEncoder(w).Encode(map[string]string{"status": "pong"})
-	if err != nil {
-		log.WithError(err).Error("Fail to encode JSON")
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.Port),
+		Handler: router,
 	}
-	return nil
+
+	//create channel for gracefull shutdown
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+	log.Info("Server Started")
+
+	<-done
+	log.Info("Server Stopped")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		// extra time to finish ongoing requests
+		duration := 2 * time.Second
+		time.Sleep(duration)
+		cancel()
+	}()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server Shutdown Failed:%+v", err)
+	}
+	log.Info("Server Exited Properly")
+
 }
