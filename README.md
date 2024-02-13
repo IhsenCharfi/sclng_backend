@@ -47,6 +47,8 @@ Both endpoints may accept filter language
 
 #### Request Example: /repos
 
+List 100 from latest github public repositories. It can be filtered by "language" to show only repositories using this language.
+
 #### Without filter
 ```bash
   localhost:3000/repos
@@ -79,6 +81,42 @@ Both endpoints may accept filter language
 ```
 
 #### Request Example: /stats
+
+Show statistics about a list of 100 from latest github public repositories. 
+It shows number of repositories and the repo with largest bytes.
+
+It can be filtered by "language" to show only stats about repositories using this language.
+#### Without filter
+```bash
+  localhost:3000/stats
+```
+#### Response Example: /stats
+```json
+// GET /stats
+{
+    "repo_with_largest_bytes": {
+        "id": 717912938,
+        "name": "PistonGame",
+        "full_name": "ert2855/PistonGame",
+        "owner": {
+            "login": "ert2855"
+        },
+        "languages_url": "https://api.github.com/repos/ert2855/PistonGame/languages",
+        "languages": {
+            "ASP.NET": 181725,
+            "C#": 14113082,
+            "C++": 17765,
+            "CMake": 426,
+            "GAP": 9254,
+            "HLSL": 7157,
+            "Objective-C++": 8863,
+            "ShaderLab": 7667
+        }
+    },
+    "total_repos": 100
+}
+```
+#### With filter
 ```bash
   localhost:3000/stats?language=PHP
 ```
@@ -86,6 +124,23 @@ Both endpoints may accept filter language
 ```json
 // GET /stats?language=PHP
 {   
-    "total_number:56
+    {
+    "repo_with_largest_bytes": {
+        "id": 718101925,
+        "name": "FInal-proj",
+        "full_name": "Franz1001/FInal-proj",
+        "owner": {
+            "login": "Franz1001"
+        },
+        "languages_url": "https://api.github.com/repos/Franz1001/FInal-proj/languages",
+        "languages": {
+            "CSS": 13266,
+            "Hack": 11159,
+            "JavaScript": 2493,
+            "PHP": 319428
+        }
+    },
+    "total_repos": 5
+}
 }
 
