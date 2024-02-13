@@ -10,6 +10,7 @@ import (
 	"github.com/Scalingo/go-utils/logger"
 )
 
+// GetStatsHandler: is a handler for stats. It makes the call of /Repos and then make some stats on it.
 func GetStatsHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
 	//Check token validation
@@ -56,10 +57,10 @@ func GetStatsHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 	if err != nil {
 		return nil
 	}
-
+	largestBytes(repositories)
 	stats := map[string]interface{}{
-		"total_repos": len(repositories),
-		//"largest_bytes": largestBytes(repositories),
+		"total_repos":             len(repositories),
+		"repo_with_largest_bytes": largestBytes(repositories),
 	}
 
 	w.Header().Add("Content-Type", "application/json")
@@ -73,9 +74,23 @@ func GetStatsHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 	return nil
 }
 
-func largest_bytes(resporitories []*models.Repository) {
-	//max := 0
-	//for _, repo := range resporitories {
-	//TODO..
-	//}
+func largestBytes(repositories []*models.Repository) (largest *models.Repository) {
+	var max int
+	var indexA int
+
+	for i, repo := range repositories {
+		for _, langBytes := range repo.Languages {
+			if max < langBytes {
+				max = langBytes
+				indexA = i
+			}
+
+		}
+	}
+
+	if indexA >= 0 && indexA < len(repositories) {
+		largest = repositories[indexA]
+	}
+
+	return largest
 }
