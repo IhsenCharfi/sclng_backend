@@ -13,6 +13,9 @@ import (
 
 var log = logger.Default()
 
+// GetReposHandler: is a handler for repos.
+// It makes the call of github API "https://docs.github.com/en/rest/search/search?apiVersion=2022-11-28#search-repositories"
+// in order to get latest repositories.
 func GetReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
 
@@ -28,6 +31,7 @@ func GetReposHandler(w http.ResponseWriter, r *http.Request, _ map[string]string
 		return err
 	}
 
+	//Get the repos list from github API
 	repositories, err := listGithubPublicRepositories(token)
 	if err != nil {
 		log.WithError(err).Error("Fail to list repo JSON")
@@ -115,6 +119,7 @@ func listGithubPublicRepositories(token string) ([]*models.Repository, error) {
 
 	var wg sync.WaitGroup
 
+	// Launch goroutines to fetch for languages for each repository
 	for i := range repositories {
 		wg.Add(1)
 		go getLanguages(token, repositories[i].Languages_URL, &wg, repositories[i])
